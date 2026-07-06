@@ -26,5 +26,5 @@ export async function clearSession() {
 export async function getCurrentUser(): Promise<StoreUser | null> {
   const id = await getSessionUserId();
   if (!id) return null;
-  return getUserById(id) ?? null;
+  return (await getUserById(id)) ?? null;
 }

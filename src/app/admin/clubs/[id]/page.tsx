@@ -9,7 +9,7 @@ export default async function AdminClubDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const club = store.getClubById(id);
+  const club = await store.getClubById(id);
   if (!club) notFound();
 
   return (

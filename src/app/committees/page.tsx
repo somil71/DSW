@@ -3,9 +3,11 @@ import Footer from "@/components/Footer";
 import CommitteeStructure from "@/components/CommitteeStructure";
 import * as store from "@/lib/store";
 
-export default function CommitteesPage() {
-  const clubs = store.getClubs();
-  const committeeMembers = store.getCommitteeMembers();
+export default async function CommitteesPage() {
+  const [clubs, committeeMembers] = await Promise.all([
+    store.getClubs(),
+    store.getCommitteeMembers(),
+  ]);
 
   return (
     <div className="flex min-h-full flex-col">

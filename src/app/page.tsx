@@ -9,16 +9,24 @@ import Footer from "@/components/Footer";
 import * as store from "@/lib/store";
 import { committees } from "@/lib/data";
 
-export default function Home() {
-  const clubs = store.getClubs();
+export default async function Home() {
+  const [clubs, notificationsData, postingsData, eventsData] = await Promise.all([
+    store.getClubs(),
+    store.getNotifications(),
+    store.getPostings({ status: "APPROVED" }),
+    store.getEvents({ status: "APPROVED" }),
+  ]);
+
   const clubNameById = new Map(clubs.map((c) => [c.id, c.name]));
 
-  const clubsWithCounts = clubs.map((c) => ({
-    ...c,
-    members: store.getMemberCount(c.id),
-  }));
+  const clubsWithCounts = await Promise.all(
+    clubs.map(async (c) => ({
+      ...c,
+      members: await store.getMemberCount(c.id),
+    }))
+  );
 
-  const notifications = store.getNotifications().map((n) => ({
+  const notifications = notificationsData.map((n) => ({
     id: n.id,
     title: n.title,
     body: n.body,
@@ -27,27 +35,23 @@ export default function Home() {
     club: n.clubId ? clubNameById.get(n.clubId) : undefined,
   }));
 
-  const postings = store
-    .getPostings({ status: "APPROVED" })
-    .map((p) => ({
-      id: p.id,
-      title: p.title,
-      summary: p.summary,
-      date: p.createdAt.slice(0, 10),
-      club: clubNameById.get(p.clubId) ?? "",
-      tag: p.tag,
-    }));
+  const postings = postingsData.map((p) => ({
+    id: p.id,
+    title: p.title,
+    summary: p.summary,
+    date: p.createdAt.slice(0, 10),
+    club: clubNameById.get(p.clubId) ?? "",
+    tag: p.tag,
+  }));
 
-  const events = store
-    .getEvents({ status: "APPROVED" })
-    .map((e) => ({
-      id: e.id,
-      title: e.title,
-      date: e.date,
-      time: e.time,
-      venue: e.venue,
-      club: clubNameById.get(e.clubId) ?? "",
-    }));
+  const events = eventsData.map((e) => ({
+    id: e.id,
+    title: e.title,
+    date: e.date,
+    time: e.time,
+    venue: e.venue,
+    club: clubNameById.get(e.clubId) ?? "",
+  }));
 
   return (
     <div className="flex min-h-full flex-col">
@@ -69,8 +73,8 @@ export default function Home() {
   );
 }
 
-function CommitteesTeaser() {
-  const committeeMembers = store.getCommitteeMembers();
+async function CommitteesTeaser() {
+  const committeeMembers = await store.getCommitteeMembers();
   const filled = committeeMembers.filter((m) => m.name).length;
   const total = committeeMembers.length;
 

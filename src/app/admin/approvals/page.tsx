@@ -9,10 +9,13 @@ function formatDate(iso: string) {
   });
 }
 
-export default function ApprovalsPage() {
-  const postings = store.getPostings({ status: "PENDING" });
-  const events = store.getEvents({ status: "PENDING" });
-  const clubNameById = new Map(store.getClubs().map((c) => [c.id, c.name]));
+export default async function ApprovalsPage() {
+  const [postings, events, clubs] = await Promise.all([
+    store.getPostings({ status: "PENDING" }),
+    store.getEvents({ status: "PENDING" }),
+    store.getClubs(),
+  ]);
+  const clubNameById = new Map(clubs.map((c) => [c.id, c.name]));
 
   return (
     <div>

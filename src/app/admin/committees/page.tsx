@@ -2,8 +2,8 @@ import * as store from "@/lib/store";
 import { committees, schools } from "@/lib/data";
 import { setCommitteeMemberAction } from "@/lib/actions";
 
-export default function AdminCommitteesPage() {
-  const allMembers = store.getCommitteeMembers();
+export default async function AdminCommitteesPage() {
+  const allMembers = await store.getCommitteeMembers();
 
   return (
     <div>

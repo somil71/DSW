@@ -6,8 +6,36 @@ const committeeBadge: Record<string, string> = {
   cultural: "bg-navy/10 text-navy",
 };
 
-export default function AdminClubsPage() {
-  const clubs = store.getClubs();
+export default async function AdminClubsPage() {
+  const [clubs, users, joinRequests] = await Promise.all([
+    store.getClubs(),
+    store.getUsers(),
+    store.getJoinRequests(),
+  ]);
+
+  const coreByClub = new Map<string, any[]>();
+  const membersByClub = new Map<string, any[]>();
+  const pendingByClub = new Map<string, number>();
+
+  users.forEach((u) => {
+    if (u.clubId) {
+      if (u.role === "CORE") {
+        const list = coreByClub.get(u.clubId) || [];
+        list.push(u);
+        coreByClub.set(u.clubId, list);
+      } else if (u.role === "MEMBER") {
+        const list = membersByClub.get(u.clubId) || [];
+        list.push(u);
+        membersByClub.set(u.clubId, list);
+      }
+    }
+  });
+
+  joinRequests.forEach((jr) => {
+    if (jr.status === "PENDING") {
+      pendingByClub.set(jr.clubId, (pendingByClub.get(jr.clubId) || 0) + 1);
+    }
+  });
 
   return (
     <div>
@@ -20,11 +48,9 @@ export default function AdminClubsPage() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {clubs.map((club) => {
-          const core = store.getCoreTeam(club.id);
-          const members = store.getMembers(club.id);
-          const pendingRequests = store
-            .getJoinRequests(club.id)
-            .filter((j) => j.status === "PENDING").length;
+          const coreCount = coreByClub.get(club.id)?.length || 0;
+          const membersCount = membersByClub.get(club.id)?.length || 0;
+          const pendingRequests = pendingByClub.get(club.id) || 0;
           return (
             <Link
               key={club.id}
@@ -42,8 +68,8 @@ export default function AdminClubsPage() {
                 {club.name}
               </h3>
               <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
-                <span>Core: {core.length}/5</span>
-                <span>Members: {members.length}</span>
+                <span>Core: {coreCount}/5</span>
+                <span>Members: {membersCount}</span>
                 {pendingRequests > 0 && (
                   <span className="font-semibold text-amber-600">
                     {pendingRequests} join req.

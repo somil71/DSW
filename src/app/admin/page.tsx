@@ -1,14 +1,15 @@
 import Link from "next/link";
 import * as store from "@/lib/store";
 
-export default function AdminOverviewPage() {
-  const clubs = store.getClubs();
-  const users = store.getUsers();
-  const pendingPostings = store.getPostings({ status: "PENDING" });
-  const pendingEvents = store.getEvents({ status: "PENDING" });
-  const pendingJoinRequests = store
-    .getJoinRequests()
-    .filter((j) => j.status === "PENDING");
+export default async function AdminOverviewPage() {
+  const [clubs, users, pendingPostings, pendingEvents, allJoinRequests] = await Promise.all([
+    store.getClubs(),
+    store.getUsers(),
+    store.getPostings({ status: "PENDING" }),
+    store.getEvents({ status: "PENDING" }),
+    store.getJoinRequests(),
+  ]);
+  const pendingJoinRequests = allJoinRequests.filter((j) => j.status === "PENDING");
 
   const stats = [
     { label: "Sub-Clubs", value: clubs.length },

@@ -24,7 +24,7 @@ export async function loginAction(
   if (password !== DEMO_PASSWORD) {
     return { error: "Incorrect password." };
   }
-  const user = store.getUserById(userId);
+  const user = await store.getUserById(userId);
   if (!user) {
     return { error: "That account could not be found." };
   }
@@ -49,7 +49,7 @@ export async function createPostingAction(formData: FormData) {
     redirect("/dashboard");
   }
   const clubId = user.role === "ADMIN" ? String(formData.get("clubId")) : user.clubId!;
-  store.createPosting({
+  await store.createPosting({
     clubId,
     title: String(formData.get("title") ?? "").trim(),
     summary: String(formData.get("summary") ?? "").trim(),
@@ -71,7 +71,7 @@ export async function createEventAction(formData: FormData) {
     redirect("/dashboard");
   }
   const clubId = user.role === "ADMIN" ? String(formData.get("clubId")) : user.clubId!;
-  store.createEvent({
+  await store.createEvent({
     clubId,
     title: String(formData.get("title") ?? "").trim(),
     date: String(formData.get("date") ?? ""),
@@ -88,7 +88,7 @@ export async function createEventAction(formData: FormData) {
 export async function decidePostingAction(id: string, approve: boolean) {
   const user = await getCurrentUser();
   if (!user || user.role !== "ADMIN") redirect("/login");
-  store.updatePostingStatus(id, approve ? "APPROVED" : "REJECTED");
+  await store.updatePostingStatus(id, approve ? "APPROVED" : "REJECTED");
   revalidatePath("/admin/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/");
@@ -97,7 +97,7 @@ export async function decidePostingAction(id: string, approve: boolean) {
 export async function decideEventAction(id: string, approve: boolean) {
   const user = await getCurrentUser();
   if (!user || user.role !== "ADMIN") redirect("/login");
-  store.updateEventStatus(id, approve ? "APPROVED" : "REJECTED");
+  await store.updateEventStatus(id, approve ? "APPROVED" : "REJECTED");
   revalidatePath("/admin/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/");
@@ -107,7 +107,7 @@ export async function requestJoinAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const clubId = String(formData.get("clubId") ?? "");
-  store.createJoinRequest(user.id, clubId);
+  await store.createJoinRequest(user.id, clubId);
   revalidatePath("/dashboard");
 }
 
@@ -117,7 +117,7 @@ export async function decideJoinRequestAction(id: string, approve: boolean) {
   if (!getPermissions(user.position, user.role === "ADMIN").manageJoinRequests) {
     redirect("/dashboard");
   }
-  store.decideJoinRequest(id, approve);
+  await store.decideJoinRequest(id, approve);
   revalidatePath("/dashboard");
   revalidatePath("/admin/clubs");
 }
@@ -130,7 +130,7 @@ export async function assignCoreAction(formData: FormData) {
   }
   const userId = String(formData.get("userId") ?? "");
   const position = String(formData.get("position") ?? "");
-  store.assignCoreRole(userId, position);
+  await store.assignCoreRole(userId, position);
   revalidatePath("/dashboard");
   revalidatePath("/admin/clubs");
 }
@@ -142,7 +142,7 @@ export async function removeCoreAction(formData: FormData) {
     redirect("/dashboard");
   }
   const userId = String(formData.get("userId") ?? "");
-  store.removeCoreRole(userId);
+  await store.removeCoreRole(userId);
   revalidatePath("/dashboard");
   revalidatePath("/admin/clubs");
 }
@@ -151,7 +151,7 @@ export async function createNotificationAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user || user.role !== "ADMIN") redirect("/login");
   const clubId = String(formData.get("clubId") ?? "");
-  store.createNotification({
+  await store.createNotification({
     title: String(formData.get("title") ?? "").trim(),
     body: String(formData.get("body") ?? "").trim(),
     priority: (formData.get("priority") === "high" ? "high" : "normal"),
@@ -164,7 +164,7 @@ export async function createNotificationAction(formData: FormData) {
 export async function deleteNotificationAction(id: string) {
   const user = await getCurrentUser();
   if (!user || user.role !== "ADMIN") redirect("/login");
-  store.deleteNotification(id);
+  await store.deleteNotification(id);
   revalidatePath("/admin/notifications");
   revalidatePath("/");
 }
@@ -174,7 +174,7 @@ export async function setCommitteeMemberAction(formData: FormData) {
   if (!user || user.role !== "ADMIN") redirect("/login");
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "");
-  store.setCommitteeMemberName(id, name);
+  await store.setCommitteeMemberName(id, name);
   revalidatePath("/admin/committees");
   revalidatePath("/");
 }

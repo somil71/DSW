@@ -17,22 +17,35 @@ function countByStatus(list: { status: string }[]) {
   };
 }
 
-export default function AdminAnalyticsPage() {
-  const clubs = store.getClubs();
+export default async function AdminAnalyticsPage() {
+  const [clubs, postings, events, users] = await Promise.all([
+    store.getClubs(),
+    store.getPostings(),
+    store.getEvents(),
+    store.getUsers(),
+  ]);
+
+  const memberCounts = new Map<string, number>();
+  users.forEach((u) => {
+    if (u.clubId) {
+      memberCounts.set(u.clubId, (memberCounts.get(u.clubId) || 0) + 1);
+    }
+  });
+  const getMemberCount = (clubId: string) => memberCounts.get(clubId) || 0;
 
   const membersByClub = clubs
     .map((c) => ({
       name: shortName(c.name),
-      members: store.getMemberCount(c.id),
+      members: getMemberCount(c.id),
     }))
     .sort((a, b) => b.members - a.members);
 
   const sportsMembers = clubs
     .filter((c) => c.committee === "sports")
-    .reduce((sum, c) => sum + store.getMemberCount(c.id), 0);
+    .reduce((sum, c) => sum + getMemberCount(c.id), 0);
   const culturalMembers = clubs
     .filter((c) => c.committee === "cultural")
-    .reduce((sum, c) => sum + store.getMemberCount(c.id), 0);
+    .reduce((sum, c) => sum + getMemberCount(c.id), 0);
 
   const committeeSplit = [
     { name: "Sports Committee", value: sportsMembers },
@@ -40,8 +53,8 @@ export default function AdminAnalyticsPage() {
   ];
 
   const contentStatus = [
-    { name: "Postings", ...countByStatus(store.getPostings()) },
-    { name: "Events", ...countByStatus(store.getEvents()) },
+    { name: "Postings", ...countByStatus(postings) },
+    { name: "Events", ...countByStatus(events) },
   ];
 
   return (

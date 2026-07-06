@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
   if (user.role === "ADMIN") redirect("/admin");
 
-  const club = user.clubId ? store.getClubById(user.clubId) : null;
+  const club = user.clubId ? await store.getClubById(user.clubId) : null;
 
   return (
     <div className="flex min-h-full flex-col bg-background">
@@ -78,11 +78,11 @@ export default async function DashboardPage() {
   );
 }
 
-function MemberClubView({ clubId }: { clubId: string }) {
-  const club = store.getClubById(clubId)!;
-  const core = store.getCoreTeam(clubId);
-  const events = store.getEvents({ clubId, status: "APPROVED" });
-  const postings = store.getPostings({ clubId, status: "APPROVED" });
+async function MemberClubView({ clubId }: { clubId: string }) {
+  const club = (await store.getClubById(clubId))!;
+  const core = await store.getCoreTeam(clubId);
+  const events = await store.getEvents({ clubId, status: "APPROVED" });
+  const postings = await store.getPostings({ clubId, status: "APPROVED" });
 
   return (
     <div>
@@ -151,9 +151,10 @@ function MemberClubView({ clubId }: { clubId: string }) {
   );
 }
 
-function JoinFlow({ userId }: { userId: string }) {
-  const clubs = store.getClubs();
-  const pending = store.getPendingJoinRequestFor(userId);
+async function JoinFlow({ userId }: { userId: string }) {
+  const clubs = await store.getClubs();
+  const pending = await store.getPendingJoinRequestFor(userId);
+  const pendingClub = pending ? await store.getClubById(pending.clubId) : null;
 
   return (
     <div>
@@ -165,10 +166,10 @@ function JoinFlow({ userId }: { userId: string }) {
         core team member will approve it.
       </p>
 
-      {pending && (
+      {pending && pendingClub && (
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Your request to join{" "}
-          <strong>{store.getClubById(pending.clubId)?.name}</strong> is
+          <strong>{pendingClub.name}</strong> is
           pending approval.
         </div>
       )}

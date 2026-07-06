@@ -35,16 +35,16 @@ export default async function ClubPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const club = store.getClubById(id);
+  const club = await store.getClubById(id);
   if (!club) notFound();
 
   const style = committeeStyles[club.committee];
   const committee = committees.find((c) => c.id === club.committee);
-  const core = store.getCoreTeam(id);
-  const members = store.getMembers(id);
-  const memberCount = store.getMemberCount(id);
-  const events = store.getEvents({ clubId: id, status: "APPROVED" });
-  const postings = store.getPostings({ clubId: id, status: "APPROVED" });
+  const core = await store.getCoreTeam(id);
+  const members = await store.getMembers(id);
+  const memberCount = await store.getMemberCount(id);
+  const events = await store.getEvents({ clubId: id, status: "APPROVED" });
+  const postings = await store.getPostings({ clubId: id, status: "APPROVED" });
 
   return (
     <div className="flex min-h-full flex-col">

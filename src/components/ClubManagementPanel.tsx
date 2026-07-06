@@ -25,7 +25,7 @@ function formatDate(iso: string) {
   });
 }
 
-export default function ClubManagementPanel({
+export default async function ClubManagementPanel({
   clubId,
   isAdmin,
   viewerPosition,
@@ -34,20 +34,32 @@ export default function ClubManagementPanel({
   isAdmin: boolean;
   viewerPosition?: string;
 }) {
-  const club = store.getClubById(clubId);
+  const club = await store.getClubById(clubId);
   if (!club) return null;
 
   const permissions = getPermissions(viewerPosition, isAdmin);
-  const core = store.getCoreTeam(clubId);
-  const members = store.getMembers(clubId);
-  const joinRequests = store
-    .getJoinRequests(clubId)
+  const core = await store.getCoreTeam(clubId);
+  const members = await store.getMembers(clubId);
+  const joinRequests = (await store.getJoinRequests(clubId))
     .filter((j) => j.status === "PENDING");
-  const postings = store.getPostings({ clubId });
-  const events = store.getEvents({ clubId });
+  const postings = await store.getPostings({ clubId });
+  const events = await store.getEvents({ clubId });
   const availablePositions = CORE_POSITIONS.filter(
     (p) => !core.some((c) => c.position === p),
   );
+
+  const studentMap = new Map<string, any>();
+  if (joinRequests.length > 0) {
+    const students = await Promise.all(
+      joinRequests.map(async (jr) => {
+        const student = await store.getUserById(jr.userId);
+        return [jr.userId, student] as const;
+      })
+    );
+    students.forEach(([id, s]) => {
+      if (s) studentMap.set(id, s);
+    });
+  }
 
   return (
     <div className="space-y-8">
@@ -155,7 +167,7 @@ export default function ClubManagementPanel({
           </h3>
           <div className="mt-3 space-y-2">
             {joinRequests.map((jr) => {
-              const student = store.getUserById(jr.userId);
+              const student = studentMap.get(jr.userId);
               return (
                 <div
                   key={jr.id}

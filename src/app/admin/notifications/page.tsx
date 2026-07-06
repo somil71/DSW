@@ -9,9 +9,11 @@ function formatDate(iso: string) {
   });
 }
 
-export default function AdminNotificationsPage() {
-  const notifications = store.getNotifications();
-  const clubs = store.getClubs();
+export default async function AdminNotificationsPage() {
+  const [notifications, clubs] = await Promise.all([
+    store.getNotifications(),
+    store.getClubs(),
+  ]);
   const clubNameById = new Map(clubs.map((c) => [c.id, c.name]));
 
   return (
